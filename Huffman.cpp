@@ -1,88 +1,132 @@
 #include <iostream>
 #include <bits/stdc++.h>
 
+
 using namespace std;
 
 struct Node
 {
 	int id;
 	int freq;
-	int prio;
+	bool internal;
 	Node *left, *right;
 
-	Node(int id, int freq, int prio)
+	Node(int id, int freq, bool internal)
 	{
 		left = NULL;
 		right = NULL;
 		this->id = id;
 		this->freq = freq;
-		this->prio = prio;
+		this->internal = internal;
 	}
 };
 
-struct compare
+struct compare : public std::binary_function<Node*, Node*, bool>
 {
-	bool operator()(Node* left, Node* right)
+	bool operator()(const Node* left, const Node* right) const
 	{
-		return (left->freq > right->freq);
+		return (left->freq >= right->freq);
+		//return (left->id > right->id);
 	}
 };
 
 void print(struct Node* root, string str, int id, int fq)
 {
-	if(root == NULL)
+	if(!root)
 	{
 		return;
 	}
-	if(root->id == id && root->freq == fq)
+	else if(root->id == id && root->freq == fq && root->internal == 0)
 	{
 		cout << str << endl;
 	}
-
-	print(root->left, str + "0", id, fq);
-	print(root->right, str + "1", id, fq);
+	else
+	{
+		print(root->left, str + "0", id, fq);
+		print(root->right, str + "1", id, fq);
+	}
+	return;
 }
 
 void Huffman(int N,int input[],int ID[])
 {
-	struct Node *left, *right, *internal, *temp;
-
+	Node *left, *right, *internal, *t;
+	int smallID;
 	priority_queue<Node*, vector<Node*>, compare> lists;
+	priority_queue<Node*, vector<Node*>, compare> temp;
 
 	for(int i = 0; i < N; i++)
 	{
 		lists.push(new Node(ID[i], input[i], 0));
 	}
-
-	while(lists.size() != 1)
+	temp = lists;
+	while(!temp.empty())
+	{
+		t = temp.top();
+		//cout << "id: " << t->id << " freq: " << t->freq << endl;
+		temp.pop();
+	}
+	//cout << endl;
+	while(1 == 1)
 	{
 		left = lists.top();
 		lists.pop();
-
 		right = lists.top();
 		lists.pop();
 
-		internal = new Node(-1, left->freq + right->freq, 1);
-		if(left->id == -1 || right->id == -1)
+		if(left->freq == right->freq)
 		{
-			if(left->id == -1)
+//			cout << "match!!" << endl;
+			if(left->id < right->id)
 			{
+				//cout << "left smaller" << endl;
+				internal = new Node(left->id, left->freq + right->freq, 1);
 				internal->left = left;
 				internal->right = right;
 				lists.push(internal);
 			}
-			else
+			else if(right->id < left->id)
 			{
-				internal->right = left;
+				//cout << "right smaller" << endl;
+				internal = new Node(right->id, left->freq + right->freq, 1);
 				internal->left = right;
+				internal->right = left;
 				lists.push(internal);
 			}
 		}
-		else
+		/*else if(left->freq < right->freq)
 		{
+			internal = new Node(left->id, left->freq + right->freq, 1);
 			internal->left = left;
 			internal->right = right;
 			lists.push(internal);
+		}
+		else if(right->freq < left->freq)
+		{
+			internal = new Node(right->id, left->freq + right->freq, 1);
+			internal->left = right;
+			internal->right = left;
+			lists.push(internal);
+		}*/
+		else
+		{
+			//cout << "here!!" << endl;
+			internal = new Node(left->id, left->freq + right->freq, 1);
+			internal->left = left;
+			internal->right = right;
+			lists.push(internal);
+		}
+		temp = lists;
+		while(!temp.empty())
+		{
+			t = temp.top();
+			//cout << "id: " << t->id << " freq: " << t->freq << endl;
+			temp.pop();
+		}
+		//cout << endl;
+		if(lists.size() == 1)
+		{
+			break;
 		}
 	}
 	for(int i = 0; i < N; i++)
@@ -90,9 +134,6 @@ void Huffman(int N,int input[],int ID[])
 		print(lists.top(), "" , ID[i], input[i]);
 	}
 }
-
-
-
 
 int main(int argc, char **argv)
 {
@@ -106,6 +147,7 @@ int main(int argc, char **argv)
 		ID[i] = i+1;
 	}
 	Huffman(N, input, ID);
+	return 0;
 }
 
 
